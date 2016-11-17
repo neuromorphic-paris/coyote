@@ -45,7 +45,14 @@ solution 'coyote'
         kind 'ConsoleApp'
         language 'C++'
         location 'build'
-        files {'source/**.hpp', 'test/**.hpp', 'test/**.cpp'}
+        files {'source/coyote.hpp', 'test/**.hpp', 'test/**.cpp'}
+
+        -- Define the include paths
+        includedirs {path.join(prefix, 'include')}
+        libdirs {path.join(prefix, 'lib')}
+
+        -- Link the dependencies
+        links {'usb-1.0'}
 
         -- Declare the configurations
         configuration 'Release'
@@ -56,9 +63,6 @@ solution 'coyote'
             targetdir 'build/Debug'
             defines {'DEBUG'}
             flags {'Symbols'}
-
-        -- Link the dependencies
-        links {'usb-1.0'}
 
         -- Linux specific settings
         configuration 'linux'
@@ -71,3 +75,37 @@ solution 'coyote'
             buildoptions {'-std=c++11', '-stdlib=libc++'}
             linkoptions {'-std=c++11', '-stdlib=libc++'}
             postbuildcommands {'cp ../source/coyote.hpp ' .. path.join(prefix, 'include/coyote.hpp')}
+
+    project 'changeId'
+        -- General settings
+        kind 'ConsoleApp'
+        language 'C++'
+        location 'build'
+        files {'source/changeId.cpp'}
+
+        -- Define the include paths
+        includedirs {path.join(prefix, 'include')}
+        libdirs {path.join(prefix, 'lib')}
+
+        -- Link the dependencies
+        links {'usb-1.0'}
+
+        -- Declare the configurations
+        configuration 'Release'
+            targetdir 'build/Release'
+            defines {'NDEBUG'}
+            flags {'OptimizeSpeed'}
+        configuration 'Debug'
+            targetdir 'build/Debug'
+            defines {'DEBUG'}
+            flags {'Symbols'}
+
+        -- Linux specific settings
+        configuration 'linux'
+            buildoptions {'-std=c++11'}
+            linkoptions {'-std=c++11'}
+
+        -- Mac OS X specific settings
+        configuration 'macosx'
+            buildoptions {'-std=c++11', '-stdlib=libc++'}
+            linkoptions {'-std=c++11', '-stdlib=libc++'}
