@@ -25,8 +25,6 @@ namespace coyote {
             {
                 checkUsbError(libusb_init(&_usbContext), "initialize libusb");
 
-                //libusb_set_debug(_usbContext, LIBUSB_LOG_LEVEL_DEBUG); // @DEBUG
-
                 libusb_device** usbDevices;
                 const auto numberOfDevices = libusb_get_device_list(_usbContext, &usbDevices);
                 if (numberOfDevices < 0) {
@@ -204,7 +202,25 @@ namespace coyote {
                 auto actualSize = 0;
                 checkUsbError(libusb_bulk_transfer(_usbHandle, 129, bytes.data(), static_cast<int32_t>(bytes.size()), &actualSize, 5000), "reading bytes");
                 if (actualSize > 2) {
-                    std::vector<uint8_t>(std::next(bytes.begin(), 2), bytes.end()).swap(bytes);
+                    const auto fullPackets = actualSize / 512;
+                    for (auto packetIndex = static_cast<std::size_t>(0); packetIndex < fullPackets; ++packetIndex) {
+                        std::copy(
+                            std::next(bytes.begin(), 512 * packetIndex + 2),
+                            std::next(bytes.begin(), 512 * (packetIndex + 1)),
+                            std::next(bytes.begin(), 510 * packetIndex)
+                        );
+                    }
+                    const auto lastPacketSize = actualSize % 512;
+                    if (lastPacketSize > 2) {
+                        std::copy(
+                            std::prev(bytes.end(), lastPacketSize - 2),
+                            bytes.end(),
+                            std::next(bytes.begin(), 510 * fullPackets)
+                        );
+                        bytes.resize(510 * fullPackets + lastPacketSize - 2);
+                    } else {
+                        bytes.resize(510 * fullPackets);
+                    }
                 } else {
                     bytes.clear();
                 }
