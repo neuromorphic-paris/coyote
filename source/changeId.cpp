@@ -198,10 +198,6 @@ class Libusb {
                 std::advance(byteIterator, 2), std::advance(targetByteIterator, 2)
             ) {
                 if (*byteIterator != *targetByteIterator || *std::next(byteIterator) != *std::next(targetByteIterator)) {
-
-                    std::cout << "Will write " << static_cast<std::size_t>(*targetByteIterator) << " instead of " << static_cast<std::size_t>(*byteIterator) << " in position " << ((byteIterator - eepromContent.begin()) / 2) << std::endl; // @DEBUG
-                    std::cout << "Will write " << static_cast<std::size_t>(*std::next(targetByteIterator)) << " instead of " << static_cast<std::size_t>(*std::next(byteIterator)) << " in position " << ((byteIterator - eepromContent.begin()) / 2) << std::endl; // @DEBUG
-
                     checkUsbTransferError(libusb_control_transfer(
                         usbHandle,
                         LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE | LIBUSB_ENDPOINT_OUT,
