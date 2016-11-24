@@ -2,7 +2,7 @@
 
 # Coyote
 
-Coyote is a header-only library to communicate with the FT2322H chip. This repository provides a tool called changeId that can setup a FT2232H to work with the library.
+Coyote is a header-only library to communicate with the FT2232H chip. This repository provides a tool called changeId that can setup a FT2232H to work with the library.
 
 # Installation
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
 
     auto chip = coyote::Chip(); // connect to the first chip available
 
-    const auto bytes = chip.write(bytes); // read bytes
+    const auto bytes = chip.read(); // read bytes
                                     // read returns as soon as a USB packet is received
                                     // use the size method of the returned vector to determine how many bytes were read
 
@@ -102,6 +102,14 @@ namespace coyote {
             virtual std::vector<uint8_t> read();
 }
 ```
+
+- `timeout` is the maximum time in milliseconds between a USB packet sending and its acknowledge. If the timeout is reached, an exception is thrown.
+- `vendorId` is FTDI's USB identifier.
+- `productId` is the FTH2232 chip's USB identifier.
+- `bytes` is a vector of bytes to send. It can have any length. The Coyote library will take care of splitting the bytes to send into chunks with the optimal size.
+- `flush` determines wether incomplete chunks are sent. As an example, if 1000000 bytes are passed to the `write` function and the packet size is 65536, fifteen complete chunks and one chunk with 16960 bytes are to be sent. If `flush` is `true` (default), the incomplete chunk is sent. Otherwise, the incomplete chunk is stored in a buffer, and will be sent with the next `write` call. The larger the chunks, the faster the transfer. However, waiting for chunks to be filled may result in an increased latency.
+
+`coyote::Chip`has two constructors: the first one connects to the first chip available, whereas the second targets a chip with a specific id.
 
 `coyote::DriverGuard` has the signature:
 ```cpp
