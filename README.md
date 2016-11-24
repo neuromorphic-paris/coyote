@@ -2,7 +2,7 @@
 
 # Coyote
 
-Coyote is a lightweight library to communicate with the FT232H chip.
+Coyote is a header-only library to communicate with the FT2322H chip. This repository provides a tool called changeId that can setup a FT2232H to work with the library.
 
 # Installation
 
@@ -25,7 +25,7 @@ Coyote also depends on libusb, which is a cross-platform USB library. Follow the
 To install the source, go to the *coyote* directory and run:
   - __Linux__: `premake4 install`
   - __OS X__: `premake4 install`
-The library files are installed in */usr/local/include*. The firmwares are installed in */usr/local/share* and the Opal Kelly Front Panel files in */usr/local/include* and */usr/local/lib*. You need to be connected to the Vision Institute local network for this step to work, as it implies downloading close-source resources.
+The library files are installed in */usr/local/include*.
 
 ## Uninstall
 
@@ -35,10 +35,98 @@ To uninstall the library, run `premake4 uninstall` from the *coyote* directory.
 
 To test the library, run the following commands:
   - Go to the *coyote* directory and run `premake4 gmake && cd build && make`. Use `premake4 --icc gmake` instead to use the Intel c++ compiler.
-  - Run the executable *Release/coyoteTest*.
+  - Run the executable *Release/coyoteTest*. The tests require having a FT2232H reading and writing bytes from a device (such as a FPGA).
 
 # Documentation
 
+## Coyote
+
+Basic example for writing bytes:
+
+```cpp
+#include <coyote.hpp>
+
+int main(int argc, char* argv[]) {
+    const auto driverGuard = coyote::DriverGuard(); // unloads the default driver under MacOS (must be run as root)
+                                                    // does nothing on other operating systems
+                                                    // the driver is reloaded when the coyote::DriverGuard is destructed
+
+    auto chip = coyote::Chip(); // connect to the first chip available
+
+    auto bytes = std::vector<uint8_t>({0xc0, 0x10, 0x73}); // create a vector of bytes
+
+    chip.write(bytes); // send the bytes
+
+    return 0;
+}
+```
+
+Basic example for reading bytes:
+
+```cpp
+#include <coyote.hpp>
+
+int main(int argc, char* argv[]) {
+    const auto driverGuard = coyote::DriverGuard(); // unloads the default driver under MacOS (must be run as root)
+                                                    // does nothing on other operating systems
+                                                    // the driver is reloaded when the coyote::DriverGuard is destructed
+
+    auto chip = coyote::Chip(); // connect to the first chip available
+
+    const auto bytes = chip.write(bytes); // read bytes
+                                    // read returns as soon as a USB packet is received
+                                    // use the size method of the returned vector to determine how many bytes were read
+
+    for (auto&& byte : bytes) {
+        // loop over the read bytes and do amazing things
+    }
+
+    return 0;
+}
+```
+
+`coyote::Chip` has the signature:
+```cpp
+namespace coyote {
+
+    /// Chip represents a FT232H chip.
+    class Chip {
+        public:
+            Chip(uint32_t timeout = 5000, uint16_t vendorId = 1027, uint16_t productId = 24596);
+            Chip(std::string id, uint32_t timeout = 5000, uint16_t vendorId = 1027, uint16_t productId = 24596);
+
+            /// write sends bytes to the chip.
+            virtual void write(const std::vector<uint8_t>& bytes, bool flush = true);
+
+            /// read receives bytes from the chip.
+            virtual std::vector<uint8_t> read();
+}
+```
+
+`coyote::DriverGuard` has the signature:
+```cpp
+namespace coyote {
+
+    /// DriverGuard unloads the default OS X driver for ftdi chips when constructed, and reloads it when destructed.
+    class DriverGuard {
+        DriverGuard();
+    }
+}
+```
+
+## changeId
+
+changeId sets up a FT2232H chip to work in FT245-style synchronous FIFO mode. It is used to define the chip's id, which is used by the Coyote library to connect to a specific chip. The chip's id is stored in the chip's eeprom: it will not be lost even if the chip is powered off.
+
+To compile the changeId tool, go to the *coyote* directory and run `premake4 gmake && cd build && make`. This command generates the executable *build/Release/changeId*, which can be copied elsewhere in the computer if needed.
+
+Running *changeId* will start an interactive shell. An empty command (pressing the RETURN key) or the command `help` (followed by RETURN) will display the list of available commands:
+
+- `l` or `list` displays connected ftdi chips' number and id. The number is used only by this program and may change when plugging a new device.
+- `a` or `listall` displays connected usb devices' vendor and product ids. If an ftdi chip does not have the correct vendor id (1027) and product id (24596), the Coyote library will not create a connection. The vendor and product ids can be changed by using the software provided by the chip manufacturer. Ftdi chips with the correct vendor and product ids are shown in green
+- `s [number] [id]` or `set [number] [id]` changes the id of the device with number [number] to [id]. The id cannot have more than 32 characters. This command must be run after the `list` command and without connecting or disconnecting devices in-between. Changing the id will also setup the chip to work in FT245-style synchronous FIFO mode.
+- `e` or `exit` terminates the program.
+- `h` or `help` shows this help message.
 
 # License
 
