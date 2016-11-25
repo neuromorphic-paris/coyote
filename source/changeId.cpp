@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <iomanip>
-#include <regex>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <unordered_map>
 #include <array>
@@ -11,11 +11,14 @@
 #include <algorithm>
 #include <random>
 
-const auto listRegex = std::regex("^\\s*(l|list)\\s*$");
-const auto listallRegex = std::regex("^\\s*(a|listall)\\s*$");
-const auto setRegex = std::regex("^\\s*(?:s|set)\\s*(\\d+)\\s+(.+?)\\s*$");
-const auto exitRegex = std::regex("^\\s*(e|exit)\\s*$");
-const auto helpRegex = std::regex("(^\\s*$|^\\s*h\\s*$|^\\s*help\\s*$)");
+/// split generates a vector from a string by splitting it on whitespaces.
+std::vector<std::string> split(const std::string& string) {
+    std::istringstream stream(string);
+    return std::vector<std::string>(
+        std::istream_iterator<std::string>(stream),
+        std::istream_iterator<std::string>()
+    );
+}
 
 /// Libusb is a cpp wrapper for libusb.
 class Libusb {
@@ -248,15 +251,15 @@ int main(int argc, char* argv[]) {
         auto libusb = Libusb();
 
         std::string command;
-        std::smatch match;
         for (;;) {
             std::cout << "> ";
             std::cout.flush();
             std::getline(std::cin, command);
 
-            if (!std::regex_match(command, match, helpRegex)) {
+            const auto words = split(command);
+            if (!words.empty() && words.front() != "h" && words.front() != "help") {
                 try {
-                    if (std::regex_match(command, match, listRegex)) {
+                    if (words.front() == "l" || words.front() == "list") {
                         libusb.refreshDevices();
                         const auto ids = libusb.ids();
                         if (ids.empty()) {
@@ -271,7 +274,28 @@ int main(int argc, char* argv[]) {
                         continue;
                     }
 
-                    if (std::regex_match(command, match, listallRegex)) {
+                    if (words.front() == "s" || words.front() == "set") {
+                        if (words.size() < 3) {
+                            throw std::runtime_error("the set command must be followed by a number and an id");
+                        }
+
+                        auto number = static_cast<std::size_t>(0);
+                        try {
+                            number = std::stoull(words[1]);
+                        } catch (const std::invalid_argument exception) {
+                            throw std::runtime_error("the set command must be followed by a number and an id");
+                        }
+
+                        auto id = std::string();
+                        for (auto wordIterator = std::next(words.begin(), 2); wordIterator != words.end(); ++wordIterator) {
+                            id += *wordIterator;
+                        }
+
+                        libusb.setId(number, id);
+                        continue;
+                    }
+
+                    if (words.front() == "a" || words.front() == "listall") {
                         libusb.refreshDevices();
                         const auto descriptors = libusb.descriptors();
                         if (descriptors.empty()) {
@@ -289,13 +313,8 @@ int main(int argc, char* argv[]) {
                         continue;
                     }
 
-                    if (std::regex_match(command, match, exitRegex)) {
+                    if (words.front() == "e" || words.front() == "exit") {
                         break;
-                    }
-
-                    if (std::regex_match(command, match, setRegex)) {
-                        libusb.setId(std::stoull(match[1]), match[2]);
-                        continue;
                     }
 
                     throw std::runtime_error("Unknown command");
@@ -310,17 +329,17 @@ int main(int argc, char* argv[]) {
                 "                                              the number is used only by this program and may change when plugging a new device\n"
                 "                                              the id is stored in the chip's memory and will not change even when it is disconnected\n"
                 "                                              the id can be used within the Coyote library to create a connection with a specific chip\n"
-                "    a, listall                            displays connected usb devices' vendor and product ids\n"
-                "                                              if an ftdi chip does not have the correct vendor id (1027) and product id (24596),\n"
-                "                                              the Coyote library will not create a connection\n"
-                "                                              the vendor and product ids can be changed by using the software provided by the chip manufacturer\n"
-                "                                              ftdi chips with the correct vendor and product ids are shown in green\n"
                 "    s [number] [id], set [number] [id]    changes the id of the device with number [number] to [id]\n"
                 "                                              the id cannot have more than 32 characters\n"
                 "                                              this command must be run after the list command and without\n"
                 "                                              connecting or disconnecting devices in-between,\n"
                 "                                              changing the id will also setup the chip to work\n"
                 "                                              in FT245-style synchronous FIFO mode\n"
+                "    a, listall                            displays connected usb devices' vendor and product ids\n"
+                "                                              if an ftdi chip does not have the correct vendor id (1027) and product id (24596),\n"
+                "                                              the Coyote library will not create a connection\n"
+                "                                              the vendor and product ids can be changed by using the software provided by the chip manufacturer\n"
+                "                                              ftdi chips with the correct vendor and product ids are shown in green\n"
                 "    e, exit                               terminates the program\n"
                 "    h, help                               shows this help message\n"
             << std::endl;
