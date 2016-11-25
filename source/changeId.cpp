@@ -11,15 +11,6 @@
 #include <algorithm>
 #include <random>
 
-/// split generates a vector from a string by splitting it on whitespaces.
-std::vector<std::string> split(const std::string& string) {
-    std::istringstream stream(string);
-    return std::vector<std::string>(
-        std::istream_iterator<std::string>(stream),
-        std::istream_iterator<std::string>()
-    );
-}
-
 /// Libusb is a cpp wrapper for libusb.
 class Libusb {
 
@@ -251,12 +242,19 @@ int main(int argc, char* argv[]) {
         auto libusb = Libusb();
 
         std::string command;
+        std::vector<std::string> words;
         for (;;) {
             std::cout << "> ";
             std::cout.flush();
             std::getline(std::cin, command);
+            {
+                std::istringstream stream(command);
+                words = std::vector<std::string>(
+                    std::istream_iterator<std::string>(stream),
+                    std::istream_iterator<std::string>()
+                );
+            }
 
-            const auto words = split(command);
             if (!words.empty() && words.front() != "h" && words.front() != "help") {
                 try {
                     if (words.front() == "l" || words.front() == "list") {
