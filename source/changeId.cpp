@@ -320,7 +320,7 @@ int main(int argc, char* argv[]) {
                 "                                              this command must be run after the list command and without\n"
                 "                                              connecting or disconnecting devices in-between,\n"
                 "                                              changing the id will also setup the chip to work\n"
-                "                                              in FT245-style synchronous FIFO mode"
+                "                                              in FT245-style synchronous FIFO mode\n"
                 "    e, exit                               terminates the program\n"
                 "    h, help                               shows this help message\n"
             << std::endl;
