@@ -278,6 +278,7 @@ namespace coyote {
             /// configure prepares the device for the FT245 style synchronous FIFO mode.
             void configure() {
                 {
+                    libusb_detach_kernel_driver(_usbHandle, 0);
                     const auto error = libusb_claim_interface(_usbHandle, 0);
                     if (error == LIBUSB_ERROR_BUSY) {
                         throw std::runtime_error("the requested device is busy");
