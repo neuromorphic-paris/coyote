@@ -34,7 +34,7 @@ To uninstall the library, run `premake4 uninstall` from the *coyote* directory.
 ## Test
 
 To test the library, run the following commands:
-  - Go to the *coyote* directory and run `premake4 gmake && cd build && make`. Use `premake4 --icc gmake` instead to use the Intel c++ compiler.
+  - Go to the *coyote* directory and run `premake4 gmake && cd build && make`.
   - Run the executable *Release/coyoteTest*. The tests require having a FT2232H reading and writing bytes from a device (such as a FPGA).
 
 # Documentation
