@@ -110,7 +110,7 @@ namespace coyote {
                 }
                 if (_usbHandle == nullptr) {
                     libusb_exit(_usbContext);
-                    throw std::runtime_error("the requested device could not be find");
+                    throw std::runtime_error("the requested device could not be found");
                 }
                 libusb_free_device_list(usbDevices, 1);
                 configure();
