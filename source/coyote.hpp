@@ -31,7 +31,7 @@ namespace coyote {
                     libusb_exit(_usbContext);
                     throw std::runtime_error("getting the devices list failed");
                 }
-                for (std::size_t index = 0; index < numberOfDevices; ++index) {
+                for (std::size_t index = 0; index < static_cast<std::size_t>(numberOfDevices); ++index) {
                     libusb_device_descriptor descriptor;
                     const auto error = libusb_get_device_descriptor(usbDevices[index], &descriptor);
                     if (error != 0) {
@@ -164,7 +164,7 @@ namespace coyote {
                 }
 
                 // send complete chunks
-                for (std::size_t chunkIndex = 0; chunkIndex < (bytes.end() - begin) / chunkSize(); ++chunkIndex) {
+                for (std::size_t chunkIndex = 0; chunkIndex < std::distance(begin, bytes.end()) / chunkSize(); ++chunkIndex) {
                     checkUsbError(libusb_bulk_transfer(
                         _usbHandle,
                         2,
@@ -180,7 +180,7 @@ namespace coyote {
                 // flush the extra bytes or fill the buffer
                 if (begin != bytes.end()) {
                     if (flush) {
-                        const auto left = bytes.end() - begin;
+                        const auto left = std::distance(begin, bytes.end());
                         checkUsbError(libusb_bulk_transfer(
                             _usbHandle,
                             2,
@@ -203,7 +203,7 @@ namespace coyote {
                 checkUsbError(libusb_bulk_transfer(_usbHandle, 129, bytes.data(), static_cast<int32_t>(bytes.size()), &actualSize, 5000), "reading bytes");
                 if (actualSize > 2) {
                     const auto fullPackets = actualSize / 512;
-                    for (auto packetIndex = static_cast<std::size_t>(0); packetIndex < fullPackets; ++packetIndex) {
+                    for (std::size_t packetIndex = 0; packetIndex < fullPackets; ++packetIndex) {
                         std::copy(
                             std::next(bytes.begin(), 512 * packetIndex + 2),
                             std::next(bytes.begin(), 512 * (packetIndex + 1)),
