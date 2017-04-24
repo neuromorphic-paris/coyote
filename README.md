@@ -16,7 +16,7 @@ Coyote relies on [Premake 4.x](https://github.com/premake/premake-4.x) (x ≥ 3)
   `ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`.
 
 Coyote also depends on libusb, which is a cross-platform USB library. Follow these steps:
-  - __Debian / Ubuntu__: Open a terminal and execute the command `sudo apt-get install libusb`.
+  - __Debian / Ubuntu__: Open a terminal and execute the command `sudo apt-get install libusb-1.0-0-dev`.
   - __Fedora__: Open a terminal and execute the command `sudo dnf install libusb`.
   - __OS X__: Open a terminal and execute the command `brew install libusb`.
 
