@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
                                     // read returns as soon as a USB packet is received
                                     // use the size method of the returned vector to determine how many bytes were read
 
-    for (auto&& byte : bytes) {
+    for (auto byte : bytes) {
         // loop over the read bytes and do amazing things
     }
 

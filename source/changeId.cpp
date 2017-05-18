@@ -300,7 +300,7 @@ int main(int argc, char* argv[]) {
                             std::cout << "No usb devices are connected" << std::endl;
                         } else {
                             std::cout << "\e[1mvendor id    product id\e[0m\n";
-                            for (auto&& descriptor : descriptors) {
+                            for (const auto& descriptor : descriptors) {
                                 if (descriptor.vendorId == 1027 && descriptor.productId == 24596) {
                                     std::cout << "\e[32m";
                                 }
